@@ -1,0 +1,806 @@
+#include <iostream>
+#include <string.h>
+#include <fstream>
+#include <sstream>
+
+using namespace std;
+
+//// CLASES //////////
+class Empleado{
+
+    protected:
+    // Atributos
+    int idEmpleado;
+    string cargo;
+    string nombre1;
+    string nombre2;
+    string apellido1;
+    string apellido2;
+    string genero;
+    string departamento;
+    string correoElectronico;
+    string fechaDeNacimiento;
+    string fechaContratacion;
+    int numTelefono;
+    double sueldoFinal;
+
+    public:
+    // Constructor
+    Empleado(string _cargo,string _nombre1,string _nombre2,
+    string _apellido1, string _apellido2 ,string _genero, 
+    string _departamento,string _correoElectronico,
+    string _fechaDeNacimiento,string _fechaContratacion,
+    int num)
+    {
+        numeroDeEmpleados++;
+        idEmpleado = numeroDeEmpleados;
+        cargo = _cargo;
+        nombre1 = _nombre1;
+        nombre2 =_nombre2;
+        apellido1 = _apellido1;
+        apellido2 = _apellido2;
+        genero =_genero;
+        departamento =_departamento;
+        correoElectronico =_correoElectronico;
+        fechaDeNacimiento = _fechaDeNacimiento;
+        fechaContratacion =_fechaContratacion;
+        numTelefono = num;
+    }; 
+
+    Empleado(){
+        numeroDeEmpleados++;
+        idEmpleado = numeroDeEmpleados;
+    }
+
+    // Contador estatico
+    static int numeroDeEmpleados;
+
+    virtual void getInformacionEmpleado() {
+        cout << nombre1 << " " << apellido1 << endl;
+    };
+
+    string getApellido1(){
+        return apellido1;
+    }
+
+    double getSueldo(){
+        return sueldoFinal;
+    }
+
+    double calcularSueldoFinal(double sueldoSinDescuentos){ 
+        // Variable para retornar sueldo final
+        double sueldoFinal;
+
+        /// Descuentos de todo empleado
+        double afpEmpleado = 0.0725; // Tasa de AFP para el empleado (7.25%)
+        double isssEmpleado = 0.03; // Tasa de ISSS para el empleado (3%)
+
+        double isssTope = 1000; //limite establecido para el calculo del descuento
+
+        double subTotal;
+        double retencionDeRenta;
+
+        
+        // Calcular el monto del descuento del ISSS
+
+        double isssDescuento;
+        
+        if (sueldoSinDescuentos <= isssTope) {
+        isssDescuento = sueldoSinDescuentos * isssEmpleado;}
+
+        else {
+        isssDescuento = isssTope * isssEmpleado;}
+
+        // Sueldo final aplicando descuento afp e isss
+        double sueldoGravable = (sueldoSinDescuentos - ((sueldoSinDescuentos*afpEmpleado) + isssDescuento));
+
+        // Verificar en qué tramo se encuentra el sueldo gravable y realizar los cálculos correspondientes
+        
+        // I-TRAMO
+        if ( (sueldoGravable > 0.01) && (sueldoGravable <= 472.00)){
+            sueldoFinal = sueldoGravable; 
+        } 
+        // II-TRAMO
+        else if ( (sueldoGravable >= 472.01) && (sueldoGravable <=895.24) ){
+            subTotal = (sueldoGravable - 472.00); 
+            subTotal *= 0.1;
+            retencionDeRenta = (subTotal + 17.67); 
+            sueldoFinal = (sueldoGravable-retencionDeRenta);
+        }
+        // III-TRAMO
+        else if ( (sueldoGravable >= 895.25) && (sueldoGravable <= 2038.10) ){
+            subTotal = (sueldoGravable - 895.24); 
+            subTotal *= 0.2;
+            retencionDeRenta = (subTotal + 60.00); 
+            sueldoFinal = (sueldoGravable-retencionDeRenta);
+        }
+        // IV-TRAMO
+        else {
+            subTotal = (sueldoGravable - 2038.10); 
+            subTotal *= 0.3;
+            retencionDeRenta = (subTotal + 288.57); 
+            sueldoFinal = (sueldoGravable-retencionDeRenta);
+        }
+        
+        return sueldoFinal;
+    };
+};
+
+//// ESTRUCTURA PARA LISTA DE EMPLEADOS ////////
+struct Nodo{
+    Empleado *empleado;
+    Nodo *nodoSiguiente;
+};
+
+// Definicion del miembro estatico
+int Empleado::numeroDeEmpleados = 0;
+
+class Director : public Empleado{
+
+    private:
+    double sueldoSinDescuentos;
+
+    public:
+    Director(string _cargo,string _nombre1,string _nombre2,
+    string _apellido1, string _apellido2 ,string _genero, 
+    string _departamento,string _correoElectronico,
+    string _fechaDeNacimiento,string _fechaContratacion,
+    int num)
+    : Empleado(
+    _cargo, _nombre1,_nombre2,
+    _apellido1, _apellido2 ,_genero, _departamento,
+    _correoElectronico,_fechaDeNacimiento,
+    _fechaContratacion, num
+    ){
+        sueldoSinDescuentos = 6000;
+        sueldoFinal = calcularSueldoFinal(sueldoSinDescuentos);
+    };
+
+    Director() : Empleado(){
+        sueldoSinDescuentos = 6000;
+        sueldoFinal = calcularSueldoFinal(sueldoSinDescuentos);
+    }
+
+    void getInformacionEmpleado() override{
+        cout << "\n\t--INFORMACION DE EMPLEADO CON ID: " << idEmpleado << "--";
+        cout << "\nCargo: " << cargo;
+        cout << "\nNombre: " << nombre1;
+        cout << "\nApellido: " << apellido1;
+        cout << "\nCorreo Electronico: " << correoElectronico;
+        cout << "\nNumero de contacto: " << numTelefono;
+        cout << "\nSalario neto mensual: " << sueldoFinal;
+    };
+
+};
+
+class Gerente : public Empleado{
+    private:
+    double sueldoSinDescuentos;
+
+    public:
+    Gerente(string _cargo,string _nombre1,string _nombre2,
+    string _apellido1, string _apellido2 ,string _genero, 
+    string _departamento,string _correoElectronico,
+    string _fechaDeNacimiento,string _fechaContratacion,
+    int num)
+    : Empleado(
+    _cargo, _nombre1,_nombre2,
+    _apellido1, _apellido2 ,_genero, _departamento,
+    _correoElectronico,_fechaDeNacimiento,
+    _fechaContratacion, num
+    ){
+        
+        sueldoSinDescuentos = 5000;
+        sueldoFinal = calcularSueldoFinal(sueldoSinDescuentos);
+
+    };
+
+    Gerente() : Empleado(){
+        sueldoSinDescuentos = 5000;
+        sueldoFinal = calcularSueldoFinal(sueldoSinDescuentos);
+    }
+
+     void getInformacionEmpleado() override{
+        cout << "\n\t--INFORMACION DE EMPLEADO CON ID: " << idEmpleado << "--";
+        cout << "\nCargo: " << cargo;
+        cout << "\nNombre: " << nombre1;
+        cout << "\nApellido: " << apellido1;
+        cout << "\nCorreo Electronico: " << correoElectronico;
+        cout << "\nNumero de contacto: " << numTelefono;
+        cout << "\nSalario neto mensual: " << sueldoFinal;
+    }
+
+};
+
+class Coordinador : public Empleado{
+    private:
+    double sueldoSinDescuentos;
+
+    public:
+    Coordinador(string _cargo,string _nombre1,string _nombre2,
+    string _apellido1, string _apellido2 ,string _genero, 
+    string _departamento,string _correoElectronico,
+    string _fechaDeNacimiento,string _fechaContratacion,
+    int num)
+    : Empleado(
+    _cargo, _nombre1,_nombre2,
+    _apellido1, _apellido2 ,_genero, _departamento,
+    _correoElectronico,_fechaDeNacimiento,
+    _fechaContratacion, num
+    ){
+        
+        sueldoSinDescuentos = 1500;
+        sueldoFinal = calcularSueldoFinal(sueldoSinDescuentos);
+
+    };
+
+    Coordinador() : Empleado(){
+        sueldoSinDescuentos = 1500;
+        sueldoFinal = calcularSueldoFinal(sueldoSinDescuentos);
+    }
+
+     void getInformacionEmpleado() override{
+        cout << "\n\t--INFORMACION DE EMPLEADO CON ID: " << idEmpleado << "--";
+        cout << "\nCargo: " << cargo;
+        cout << "\nNombre: " << nombre1;
+        cout << "\nApellido: " << apellido1;
+        cout << "\nCorreo Electronico: " << correoElectronico;
+        cout << "\nNumero de contacto: " << numTelefono;
+        cout << "\nSalario neto mensual: " << sueldoFinal;
+    }
+
+};
+
+class Supervisor : public Empleado{
+    private:
+    double sueldoSinDescuentos;
+
+    public:
+    Supervisor(string _cargo,string _nombre1,string _nombre2,
+    string _apellido1, string _apellido2 ,string _genero, 
+    string _departamento,string _correoElectronico,
+    string _fechaDeNacimiento,string _fechaContratacion,
+    int num)
+    : Empleado(
+    _cargo, _nombre1,_nombre2,
+    _apellido1, _apellido2 ,_genero, _departamento,
+    _correoElectronico,_fechaDeNacimiento,
+    _fechaContratacion, num
+    ){
+        
+        sueldoSinDescuentos = 750;
+        sueldoFinal = calcularSueldoFinal(sueldoSinDescuentos);
+
+    };
+
+    Supervisor() : Empleado(){
+        sueldoSinDescuentos = 750;
+        sueldoFinal = calcularSueldoFinal(sueldoSinDescuentos);
+    }
+
+     void getInformacionEmpleado() override{
+        cout << "\n\t--INFORMACION DE EMPLEADO CON ID: " << idEmpleado << "--";
+        cout << "\nCargo: " << cargo;
+        cout << "\nNombre: " << nombre1;
+        cout << "\nApellido: " << apellido1;
+        cout << "\nCorreo Electronico: " << correoElectronico;
+        cout << "\nNumero de contacto: " << numTelefono;
+        cout << "\nSalario neto mensual: " << sueldoFinal;
+    }
+    
+};
+
+class Operadores : public Empleado{
+    private:
+    double sueldoSinDescuentos;
+
+    public:
+    Operadores(string _cargo,string _nombre1,string _nombre2,
+    string _apellido1, string _apellido2 ,string _genero, 
+    string _departamento,string _correoElectronico,
+    string _fechaDeNacimiento,string _fechaContratacion,
+    int num)
+    : Empleado(
+    _cargo, _nombre1,_nombre2,
+    _apellido1, _apellido2 ,_genero, _departamento,
+    _correoElectronico,_fechaDeNacimiento,
+    _fechaContratacion, num
+    ){
+        
+        sueldoSinDescuentos = 350;
+        sueldoFinal = calcularSueldoFinal(sueldoSinDescuentos);
+
+    };
+
+    Operadores() : Empleado(){
+        sueldoSinDescuentos = 350;
+        sueldoFinal = calcularSueldoFinal(sueldoSinDescuentos);
+    }
+
+     void getInformacionEmpleado() override{
+        cout << "\n\t--INFORMACION DE EMPLEADO CON ID: " << idEmpleado << "--";
+        cout << "\nCargo: " << cargo;
+        cout << "\nNombre: " << nombre1;
+        cout << "\nApellido: " << apellido1;
+        cout << "\nCorreo Electronico: " << correoElectronico;
+        cout << "\nNumero de contacto: " << numTelefono;
+        cout << "\nSalario neto mensual: " << sueldoFinal;
+    }
+
+};
+
+
+//// PROTOTIPOS /////////
+void menu();
+void ingresarEmpleadoMenu();
+void ingresarEmpleado(int);
+void leerEmpleados();
+void insertarEmpleadoAlfabeticamente(Nodo *& lista, Empleado* em);
+void mostrarEmpleados(Nodo *lista);
+void insertarEmpleadoPorSueldoAsc(Nodo *&lista, Empleado *em);
+void insertarEmpleadoPorSueldoDesc(Nodo *&lista, Empleado *em);
+
+/// LISTAS // 
+Nodo *listaEmpleadosPorApellido = nullptr;
+Nodo *listaEmpleadosPorSueldoAsc = nullptr;
+Nodo *listaEmpleadosPorSueldoDesc = nullptr;
+
+//// NUMEMPLEADOS
+int numEmpleadosDirectorGeneral = 0;
+int numEmpleadosDirectorDeCuentas =0;
+int numEmpleadosGerenteDeVenta = 0;
+int numEmpleadosGerenteDeProductos = 0;
+int numEmpleadosCoordinadorDeArea = 0;
+int numEmpleadosSupervisorDeServicio = 0;
+int numEmpleadosTeleopeador = 0;
+
+//// METODO MAIN //////////
+int main(){
+    menu();
+}
+
+
+// MENU GENERAL
+void menu(){
+
+    int opcion, option;
+    
+    do {
+        cout << "------------------------------------------------------------------------";
+        cout << "\n\t\t..|Call Center|..";
+        cout << "\n1. Mostrar Empleados Alfabeticamente por apellido";
+        cout << "\n2. Mostrar Empleados por orden de sueldo";
+        cout << "\n3. Mostrar Empleados segun posicion laboral";
+        cout << "\n4. Agregar nuevos Empleados";
+        cout << "\n5. Salir del programa";
+        cout << "\nSeleccione una opcion: ";
+        cin >> opcion;
+        cout << "------------------------------------------------------------------------\n";
+        fflush(stdin);
+
+        if ((opcion < 1) || (opcion > 5)){
+            cout << "\nPor favor ingrese una opcion valida\n";
+        }
+
+        switch (opcion) {
+        case 1:
+            cout << "\n\t\tNOMINA DE EMPLEADOS\n";
+            leerEmpleados();
+            mostrarEmpleados(listaEmpleadosPorApellido);
+            break;
+        case 2:
+            leerEmpleados();
+            do {
+                cout << "\n\t\tOpciones disponibles";
+                cout << "\n1. Ordenados por sueldo de forma ascendente";
+                cout << "\n2. Ordenados por sueldo de forma descendente";
+                cout << "\nSeleccione una opcion: ";
+                cin >> option;
+                fflush(stdin);
+
+                cout << "------------------------------------------------------------------------\n";
+
+                if (option == 1){
+                    cout << "\n\tNOMINA DE EMPLEADOS ORDENADOS POR SUELDO ASCENDENTEMENTE\n";
+                    mostrarEmpleados(listaEmpleadosPorSueldoAsc);
+                } 
+                else if (option == 2){
+                    cout << "\n\tNOMINA DE EMPLEADOS ORDENADOS POR SUELDO DESCENDENTEMENTE\n";
+                    mostrarEmpleados(listaEmpleadosPorSueldoDesc);
+                }
+                else {
+                    cout << "\nPor favor ingrese una opcion valida\n";
+                }
+
+            } while (option < 1 || option > 2);
+            break;
+        case 3:
+                leerEmpleados();
+                cout << "\n\t..|ROLES|..";
+                cout << "\n1. Director General: " << numEmpleadosDirectorGeneral;
+                cout << "\n2. Director de Cuentas: " << numEmpleadosDirectorDeCuentas;
+                cout << "\n3. Gerente de Venta: " << numEmpleadosGerenteDeVenta;
+                cout << "\n4. Gerente de Productos: " << numEmpleadosGerenteDeProductos;
+                cout << "\n5. Coordinador: "<< numEmpleadosCoordinadorDeArea;
+                cout << "\n6. Supervisor: "<< numEmpleadosSupervisorDeServicio;
+                cout << "\n7. Operadores: "<< numEmpleadosTeleopeador << endl;
+            
+            break;
+        case 4:
+            ingresarEmpleadoMenu();
+            break;
+        case 5:
+            break;
+        default:
+            break;
+        }
+    } while (opcion!=5);
+
+    
+}
+
+
+//// METODOS //////////////
+
+/*
+ * Metodo que permite el ingreso de empleados
+ * segun el cargo de este.
+*/
+void ingresarEmpleadoMenu() {
+    char option;
+    int cargo;
+
+    do {
+        do {
+            cout << "\n\t..|CARGOS|..";
+            cout << "\n1. Director";
+            cout << "\n2. Gerente";
+            cout << "\n3. Coordinador";
+            cout << "\n4. Supervisor";
+            cout << "\n5. Operadores";
+            cout << "\nQue cargo desea agregar?: ";
+            cin >> cargo;
+            fflush(stdin);
+
+            if ((cargo < 1) || (cargo > 5)) {
+                cout << "\nPor favor ingrese una opcion valida\n";
+            }
+        } while ((cargo < 1) || (cargo > 5));
+
+
+        switch (cargo) {
+            case 1:
+                ingresarEmpleado(1);
+                break;
+            case 2:
+                ingresarEmpleado(2);
+                break;
+            case 3:
+                ingresarEmpleado(3);
+                break;
+            case 4:
+                ingresarEmpleado(4);
+                break;
+            case 5:
+                ingresarEmpleado(5);
+                break;
+            default:
+                break;
+        }
+
+
+        cout << "\nDesea agregar otro empleado? (S/N): ";
+        cin >> option;
+    } while (option == 'S' || option == 's');
+
+}
+
+/*
+ * Función que permite agregar un empleado a la nomina de empleados
+ * int cargoAIngresar
+ * 1 -> Director General
+ * 2 -> Gerente de Venta
+ * 3 -> Coordinador de Area
+ * 4 -> Supervisor de Servicio
+ * 5 -> Teleoperador
+ * 
+*/
+void ingresarEmpleado(int cargoAIngresar){
+
+    ofstream archivo;
+    archivo.open("../empleados.csv", ios::out | ios::app);
+
+    if (!archivo) {
+        cout << "\nNo se pudo abrir el archivo de empleados.";
+    }
+    else {
+        string cargo,nombre1,nombre2,apellido1,apellido2,genero,
+        departamento, correoElectronico, fechaDeNacimiento, 
+        fechaContratacion;
+
+        int numTelefono;
+
+        cout << "\nIngrese el primer nombre: ";
+        getline(cin, nombre1);
+        cout << "Ingrese el segundo nombre: ";
+        getline(cin, nombre2);
+        cout << "Ingrese el primer apellido: ";
+        getline(cin, apellido1);
+        cout << "Ingrese el segundo apellido: ";
+        getline(cin, apellido2);
+        cout << "Ingrese el genero (Masculino/Femenino): ";
+        getline(cin, genero);
+        cout << "Ingrese el correo electronico: ";
+        getline(cin, correoElectronico);
+        cout << "Ingrese la fecha de nacimiento (DD/MM/YYYY): ";
+        getline(cin, fechaDeNacimiento);
+        cout << "Ingrese la fecha de contratacion (DD/MM/YYYY): ";
+        getline(cin, fechaContratacion);
+        cout << "Ingrese Numero de telefono: ";
+        cin >> numTelefono; 
+        fflush(stdin); // Limpiamos buffer de lectura
+
+        int cargo1o2;
+
+        if (cargoAIngresar == 1){
+
+            cout << "\nDigite '1' para agregar un Director General o digite '2' para agregar un Director de Cuentas: ";
+            cin >> cargo1o2;
+            fflush(stdin);
+
+            if (cargo1o2 == 1){
+                cargo = "Director General";
+            }
+            else{
+                cargo = "Director de Cuentas";
+            }
+
+            departamento = "Comercial";   
+        }
+        else if(cargoAIngresar == 2){
+
+            cout << "Digite '1' para agregar un Gerente de Venta o digite '2' para agregar un Gerente de Produtos ";
+            cin >> cargo1o2;
+            fflush(stdin);
+
+            if (cargo1o2 == 1){
+                cargo = "Gerente de Venta";
+            }
+            else{
+                cargo = "Gerente de Productos";
+            }
+
+            departamento = "Comercial";
+        }
+        else if(cargoAIngresar == 3){
+            cargo = "Coordinador de Area";
+            departamento = "Operaciones";
+        }
+        else if(cargoAIngresar == 4){
+            cargo = "Supervisor de Servicio";
+            departamento = "Operaciones";
+        }
+        else if(cargoAIngresar == 5){
+            cargo = "Teleoperador";
+            departamento = "Operaciones";
+        }
+
+        archivo << cargo << ";" << nombre1 
+        << ";" << nombre2 << ";" << apellido1 
+        << ";" << apellido2 << ";" << genero 
+        << ";" << departamento << ";" << correoElectronico 
+        << ";" << fechaDeNacimiento << ";" << fechaContratacion 
+        << ";" << numTelefono <<endl;
+
+        archivo.close();
+        cout << "\n--*Empleado ingresado con exito*--";
+
+    }
+}
+
+/*
+ * Función que permite leer los empleados de la nomina.
+ * Genera el ingreso de los empleados a la lista de empleados.
+*/
+void leerEmpleados(){
+    // Reseteamos cuenta de empleados y el numero de empleados
+    Empleado::numeroDeEmpleados = 0;
+    listaEmpleadosPorApellido = nullptr;
+    listaEmpleadosPorSueldoAsc = nullptr;
+    listaEmpleadosPorSueldoDesc = nullptr;
+    
+    numEmpleadosDirectorGeneral = 0;
+    numEmpleadosDirectorDeCuentas =0;
+    numEmpleadosGerenteDeVenta = 0;
+    numEmpleadosGerenteDeProductos = 0;
+    numEmpleadosCoordinadorDeArea = 0;
+    numEmpleadosSupervisorDeServicio = 0;
+    numEmpleadosTeleopeador = 0;
+    
+    Empleado *empleado;
+
+    ifstream archivo;
+    archivo.open("../empleados.csv", ios::in);
+
+    if (!archivo){
+        cout << "\nNo se pudo abrir el archivo de empleados.\n";
+    }
+    else {
+        string linea;
+
+        string cargo,nombre1,nombre2,apellido1,apellido2,genero,
+        departamento, correoElectronico, fechaDeNacimiento, 
+        fechaContratacion, numTelefono;
+
+        while(getline(archivo,linea)){
+
+            // Convertimos los string a stream (tokens)
+            stringstream token(linea);
+
+            // Separamos la informacion de cada token 
+            getline(token, cargo, ';');
+            getline(token, nombre1, ';');
+            getline(token, nombre2, ';');
+            getline(token, apellido1, ';');
+            getline(token, apellido2, ';');
+            getline(token, genero, ';');
+            getline(token, departamento, ';');
+            getline(token, correoElectronico, ';');
+            getline(token, fechaDeNacimiento, ';');
+            getline(token, fechaContratacion, ';');
+            getline(token, numTelefono, ';');
+
+            // Verificamos que tipo de empleado es y lo agregamos a la lista listaEmpleadosPorApellido
+            if (cargo == "Director General"){
+                empleado = new Director(cargo,nombre1,nombre2,apellido1,apellido2,
+                                            genero, departamento, correoElectronico,
+                                            fechaDeNacimiento, fechaContratacion, stoi(numTelefono));
+                numEmpleadosDirectorGeneral+=1;
+                
+            }
+            else if(cargo == "Director de Cuentas"){
+                empleado = new Director(cargo,nombre1,nombre2,apellido1,apellido2,
+                                            genero, departamento, correoElectronico,
+                                            fechaDeNacimiento, fechaContratacion, stoi(numTelefono));
+                numEmpleadosDirectorDeCuentas+=1;
+            }
+            else if(cargo == "Gerente de Venta"){
+                empleado = new Gerente(cargo,nombre1,nombre2,apellido1,apellido2,
+                                            genero, departamento, correoElectronico,
+                                            fechaDeNacimiento, fechaContratacion, stoi(numTelefono));
+                numEmpleadosGerenteDeVenta+=1;
+            }
+            else if(cargo == "Gerente de Productos"){
+                empleado = new Gerente(cargo,nombre1,nombre2,apellido1,apellido2,
+                                            genero, departamento, correoElectronico,
+                                            fechaDeNacimiento, fechaContratacion, stoi(numTelefono));
+                numEmpleadosGerenteDeProductos+=1;                          
+            }
+            else if(cargo =="Coordinador de Area"){
+                empleado = new Coordinador(cargo,nombre1,nombre2,apellido1,apellido2,
+                                            genero, departamento, correoElectronico,
+                                            fechaDeNacimiento, fechaContratacion, stoi(numTelefono));
+                numEmpleadosCoordinadorDeArea+=1;                            
+            }
+            else if(cargo == "Supervisor de Servicio"){
+                empleado = new Supervisor(cargo,nombre1,nombre2,apellido1,apellido2,
+                                            genero, departamento, correoElectronico,
+                                            fechaDeNacimiento, fechaContratacion, stoi(numTelefono));
+                numEmpleadosSupervisorDeServicio+=1;
+
+            }
+            else if(cargo == "Teleoperador"){
+                empleado = new Operadores(cargo,nombre1,nombre2,apellido1,apellido2,
+                                            genero, departamento, correoElectronico,
+                                            fechaDeNacimiento, fechaContratacion, stoi(numTelefono));
+                numEmpleadosTeleopeador+=1;
+
+            }
+
+            insertarEmpleadoAlfabeticamente(listaEmpleadosPorApellido, empleado);
+            insertarEmpleadoPorSueldoAsc(listaEmpleadosPorSueldoAsc, empleado);
+            insertarEmpleadoPorSueldoDesc(listaEmpleadosPorSueldoDesc, empleado);
+        }
+
+        archivo.close();
+    }
+}
+
+void insertarEmpleadoAlfabeticamente(Nodo *&lista, Empleado* _empleado){
+    // Se crea un nuevo nodo
+    Nodo *nuevoNodo = new Nodo();
+    // Se asigna el empleado al nodo
+    nuevoNodo->empleado = _empleado;
+
+    // Creamos los nodos auxiliares
+    Nodo *aux1 = lista;
+    Nodo *aux2;
+
+    // Se realiza el ciclo para guardar de forma alfabetica segun ambos apellidos
+    while ( (aux1 != NULL) && (aux1->empleado->getApellido1() < _empleado->getApellido1()) ){
+        aux2 = aux1;
+        aux1 = aux1 -> nodoSiguiente;
+    }
+
+    if(lista == aux1){
+        lista = nuevoNodo;
+    } else{
+        aux2 -> nodoSiguiente = nuevoNodo;
+    }
+
+    nuevoNodo ->nodoSiguiente = aux1;
+}
+
+void mostrarEmpleados(Nodo *lista){
+    Nodo *elementoActual;
+    
+    // Definimos la primer posicion de la lista
+    elementoActual = lista;
+
+    // Mientras el nodo no sea null
+    while(elementoActual!= NULL){
+        elementoActual->empleado->getInformacionEmpleado();
+        elementoActual = elementoActual->nodoSiguiente;
+        cout << "\n";
+    }
+    cout << endl;
+}
+
+void insertarEmpleadoPorSueldoAsc(Nodo *&lista, Empleado* _empleado){
+    // Se crea un nuevo nodo
+    Nodo *nuevoNodo = new Nodo();
+
+    // Se asigna el empleado al nodo
+    nuevoNodo->empleado = _empleado;
+
+    // Creamos los nodos auxiliares
+    Nodo *aux1 = lista;
+    Nodo *aux2;
+
+    // Se realiza el ciclo para guardar de forma ascendente5
+    while ( (aux1 != NULL) && (aux1->empleado->getSueldo() < _empleado->getSueldo()) ){
+        aux2 = aux1;
+        aux1 = aux1 -> nodoSiguiente;
+    }
+
+    if(lista == aux1){
+        lista = nuevoNodo;
+    } else{
+        aux2 -> nodoSiguiente = nuevoNodo;
+    }
+
+    nuevoNodo ->nodoSiguiente = aux1;
+}
+
+void insertarEmpleadoPorSueldoDesc(Nodo *&lista, Empleado* _empleado){
+    // Se crea un nuevo nodo
+    Nodo *nuevoNodo = new Nodo();
+
+    // Se asigna el empleado al nodo
+    nuevoNodo->empleado = _empleado;
+
+    // Creamos los nodos auxiliares
+    Nodo *aux1 = lista;
+    Nodo *aux2;
+
+    // Se realiza el ciclo para guardar de forma descendente
+    while ( (aux1 != NULL) && (aux1->empleado->getSueldo() > _empleado->getSueldo()) ){
+        aux2 = aux1;
+        aux1 = aux1 -> nodoSiguiente;
+    }
+
+    // Si se llega a un empleado con igual sueldo, se mantiene el orden original
+    while (aux1 != nullptr && aux1->empleado->getSueldo() == _empleado->getSueldo()) {
+        aux2 = aux1;
+        aux1 = aux1->nodoSiguiente;
+    }
+
+    if(lista == aux1){
+        lista = nuevoNodo;
+    } else{
+        aux2 -> nodoSiguiente = nuevoNodo;
+    }
+
+    nuevoNodo ->nodoSiguiente = aux1;
+}
+
